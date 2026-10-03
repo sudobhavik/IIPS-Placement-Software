@@ -18,9 +18,7 @@ class AuditLog(CreatedAtMixin, Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    actor_user_id: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id"), index=True
-    )
+    actor_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True)
     action: Mapped[str] = mapped_column(String(30))
     entity_type: Mapped[str] = mapped_column(String(50))
     entity_id: Mapped[str | None] = mapped_column(String(64))

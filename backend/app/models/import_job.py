@@ -21,9 +21,7 @@ class ImportJob(CreatedAtMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     kind: Mapped[str] = mapped_column(String(20))
     file_id: Mapped[int] = mapped_column(ForeignKey("files.id"))
-    status: Mapped[str] = mapped_column(
-        String(20), server_default=ImportStatus.PENDING.value
-    )
+    status: Mapped[str] = mapped_column(String(20), server_default=ImportStatus.PENDING.value)
     total_rows: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     success_rows: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     failed_rows: Mapped[int] = mapped_column(Integer, server_default=text("0"))
