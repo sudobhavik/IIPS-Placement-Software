@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, String, text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, SmallInteger, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -25,10 +25,9 @@ class User(TimestampMixin, Base):
     password_hash: Mapped[str | None] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(20))
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
-    must_change_password: Mapped[bool] = mapped_column(
-        Boolean, server_default=text("false")
-    )
+    must_change_password: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class PasswordResetToken(CreatedAtMixin, Base):
@@ -38,13 +37,14 @@ class PasswordResetToken(CreatedAtMixin, Base):
     __table_args__ = (enum_check("purpose", TokenPurpose, "purpose"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), index=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)  # sha256 hex
     purpose: Mapped[str] = mapped_column(String(20))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    failed_attempts: Mapped[int] = mapped_column(
+        SmallInteger, server_default=text("0"), nullable=False
+    )
 
 
 class RefreshToken(CreatedAtMixin, Base):
@@ -53,9 +53,7 @@ class RefreshToken(CreatedAtMixin, Base):
     __tablename__ = "refresh_tokens"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), index=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)  # sha256 hex
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

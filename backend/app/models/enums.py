@@ -59,3 +59,8 @@ class AuditAction(StrEnum):
     STATUS_CHANGE = "status_change"
     OVERRIDE = "override"
     LOGIN = "login"
+    INVITE_SENT = "invite_sent"
+    ACTIVATION = "activation"
+    LOGIN_FAILED = "login_failed"
+    LOGOUT = "logout"
+    IMPORT = "import"
