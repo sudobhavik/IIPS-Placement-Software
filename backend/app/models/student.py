@@ -19,7 +19,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db import Base
 from app.models.base import SoftDeleteMixin, TimestampMixin, enum_check
 from app.models.enums import AcademicLevel, Gender, VerificationStatus
-
+from app.models.master import Batch, Course, Specialization
+from app.models.user import User
 
 class Student(SoftDeleteMixin, TimestampMixin, Base):
     """Placement profile. Name and phone live on `users`. 'Placed' is derived from offers."""
@@ -54,6 +55,9 @@ class Student(SoftDeleteMixin, TimestampMixin, Base):
     # Optional personal details. Gender is for reporting only, never a model feature.
     gender: Mapped[str | None] = mapped_column(String(20))
     date_of_birth: Mapped[date | None] = mapped_column(Date)
+    father_name: Mapped[str | None] = mapped_column(String(100))
+    mother_name: Mapped[str | None] = mapped_column(String(100))
+    caste: Mapped[str | None] = mapped_column(String(50))
     city: Mapped[str | None] = mapped_column(String(100))
     state: Mapped[str | None] = mapped_column(String(100))
     linkedin_url: Mapped[str | None] = mapped_column(String(255))

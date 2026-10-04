@@ -12,12 +12,31 @@ services:
       timeout: 5s
       retries: 10
 
+  backend-init:
+    build: ./backend
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head &&
+      python -m app.scripts.seed_master_data &&
+      if [ -f /app/seed_data/students.xlsx ]; then
+        python -m app.scripts.import_students --file /app/seed_data/students.xlsx --batch-label '2024-26' --passing-year 2026 --admin-email admin@example.com;
+      else
+        echo 'No seed data found';
+      fi"
+
   backend:
     build: ./backend
     env_file: .env
     depends_on:
       db:
         condition: service_healthy
+      backend-init:
+        condition: service_completed_successfully
     volumes:
       - ./backend:/app
     ports:

@@ -111,7 +111,7 @@ class StudentImportService:
         headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
 
         # Drop forbidden columns immediately
-        forbidden_cols = {"username", "password", "father", "mother", "caste", "home_address"}
+        forbidden_cols = {"username", "password"}
         header_map = {h: i for i, h in enumerate(headers) if h and h not in forbidden_cols}
 
         required_headers = [
@@ -181,6 +181,11 @@ class StudentImportService:
         raw_roll = get_val("roll_no")
         raw_is_placed = get_val("is_placed")
         raw_is_debarred = get_val("is_debarred")
+        
+        raw_father = get_val("father")
+        raw_mother = get_val("mother")
+        raw_caste = get_val("caste")
+        raw_address = get_val("home_address")
 
         if raw_is_placed:
             self.placed_flag_ignored += 1
@@ -290,8 +295,11 @@ class StudentImportService:
             gap_years=0,
             gender=gender,
             date_of_birth=dob,
-            city=None,
-            state=None,
+            father_name=self._clean_name(raw_father) if raw_father else None,
+            mother_name=self._clean_name(raw_mother) if raw_mother else None,
+            caste=str(raw_caste).strip() if raw_caste else None,
+            city=self._extract_city_state(str(raw_address).strip() if raw_address else None)[0],
+            state=self._extract_city_state(str(raw_address).strip() if raw_address else None)[1],
             linkedin_url=None,
             github_url=None,
             portfolio_url=None,
@@ -363,9 +371,10 @@ class StudentImportService:
     ) -> None:
         """Handle idempotent re-run: skip existing, report differing fields."""
         differing_fields = []
-        if existing_student:
-            if existing_student.email != email:
+        if existing_user:
+            if existing_user.email != email:
                 differing_fields.append("email")
+        if existing_student:
             if existing_student.course_id != self.course_cache.get(enrollment):
                 differing_fields.append("course")
 
@@ -552,10 +561,7 @@ class StudentImportService:
         return normalized
 
     def _parse_dob(self, value: Any, row_num: int) -> date | None:
-        if value is None:
-            self._add_error(
-                row_num, "dob", ImportErrorCode.INVALID_DOB, "Date of birth is required"
-            )
+        if value is None or (isinstance(value, str) and value.strip() == ""):
             return None
 
         if isinstance(value, datetime):
@@ -605,6 +611,8 @@ class StudentImportService:
                 return None
             return None
 
+        if isinstance(value, float):
+            value = int(value)
         digits = re.sub(r"\D", "", str(value))
         if digits.startswith("91") and len(digits) == 12:
             digits = digits[2:]
@@ -713,20 +721,19 @@ class StudentImportService:
             )
             return None
 
-        return round(num * 10, 2)
+        return round(num, 2)
 
     def _parse_cgpa_raw(
         self, value: Any, field_name: str, row_num: int, allow_blank_for_mtech: bool = False
     ) -> float | None:
         """Parse CGPA value (0-10 scale). Returns raw CGPA (0-10) without multiplying by 10."""
         if value is None or (isinstance(value, str) and value.strip() == ""):
-            if allow_blank_for_mtech:
-                self._add_warning(
-                    row_num,
-                    field_name,
-                    ImportWarningCode.UG_CGPA_BLANK_MTECH,
-                    "UG CGPA blank for M.Tech student",
-                )
+            self._add_warning(
+                row_num,
+                field_name,
+                "blank_score",
+                f"{field_name} is blank",
+            )
             return None
 
         try:
@@ -797,3 +804,17 @@ class StudentImportService:
     def _add_warning(self, row_num: int, column: str | None, code: str, message: str) -> None:
         self.warnings += 1
         logger.info("Import warning row %d col %s: %s", row_num, column, code)
+
+    def _extract_city_state(self, address: str | None) -> tuple[str | None, str | None]:
+        if not address:
+            return None, None
+        parts = [p.strip() for p in address.split(",") if p.strip()]
+        if len(parts) >= 3:
+            return parts[-2], parts[-1]
+        elif len(parts) == 2:
+            return parts[-1], None
+        else:
+            words = address.split()
+            if words:
+                return words[-1], None
+        return None, None
