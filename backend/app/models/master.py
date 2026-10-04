@@ -17,9 +17,7 @@ class Course(TimestampMixin, Base):
     duration_years: Mapped[int | None] = mapped_column(SmallInteger)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
 
-    specializations: Mapped[list["Specialization"]] = relationship(
-        back_populates="course"
-    )
+    specializations: Mapped[list["Specialization"]] = relationship(back_populates="course")
 
 
 class Specialization(TimestampMixin, Base):
