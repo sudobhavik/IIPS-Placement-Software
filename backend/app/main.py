@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.api.v1 import api_router
 from app.api.v1.students import router as students_router
 from app.core.config import settings
 from app.core.db import get_db
@@ -16,6 +17,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(api_router, prefix="/api/v1")
 
 app.include_router(students_router, prefix="/api/v1", tags=["students"])
 

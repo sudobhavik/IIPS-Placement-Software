@@ -9,9 +9,8 @@ Create Date: 2026-10-03 04:17:30.481757
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "1ec092a37dbf"
@@ -28,9 +27,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("label", sa.String(length=20), nullable=False),
         sa.Column("passing_year", sa.SmallInteger(), nullable=False),
-        sa.Column(
-            "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
-        ),
+        sa.Column("is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
@@ -53,9 +50,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=150), nullable=False),
         sa.Column("level", sa.String(length=20), nullable=False),
         sa.Column("duration_years", sa.SmallInteger(), nullable=True),
-        sa.Column(
-            "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
-        ),
+        sa.Column("is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
@@ -68,9 +63,7 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.CheckConstraint(
-            "level IN ('UG', 'PG', 'DIPLOMA')", name=op.f("ck_courses_level")
-        ),
+        sa.CheckConstraint("level IN ('UG', 'PG', 'DIPLOMA')", name=op.f("ck_courses_level")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_courses")),
         sa.UniqueConstraint("code", name=op.f("uq_courses_code")),
     )
@@ -108,9 +101,7 @@ def upgrade() -> None:
         ["actor_user_id"],
         unique=False,
     )
-    op.create_index(
-        "ix_audit_logs_created_at", "audit_logs", ["created_at"], unique=False
-    )
+    op.create_index("ix_audit_logs_created_at", "audit_logs", ["created_at"], unique=False)
     op.create_index(
         "ix_audit_logs_entity", "audit_logs", ["entity_type", "entity_id"], unique=False
     )
@@ -136,9 +127,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("storage_key", name=op.f("uq_files_storage_key")),
     )
     op.create_index(op.f("ix_files_sha256"), "files", ["sha256"], unique=False)
-    op.create_index(
-        op.f("ix_files_uploaded_by_id"), "files", ["uploaded_by_id"], unique=False
-    )
+    op.create_index(op.f("ix_files_uploaded_by_id"), "files", ["uploaded_by_id"], unique=False)
     op.create_table(
         "password_reset_tokens",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -164,9 +153,7 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_password_reset_tokens")),
-        sa.UniqueConstraint(
-            "token_hash", name=op.f("uq_password_reset_tokens_token_hash")
-        ),
+        sa.UniqueConstraint("token_hash", name=op.f("uq_password_reset_tokens_token_hash")),
     )
     op.create_index(
         op.f("ix_password_reset_tokens_user_id"),
@@ -197,17 +184,13 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_refresh_tokens")),
         sa.UniqueConstraint("token_hash", name=op.f("uq_refresh_tokens_token_hash")),
     )
-    op.create_index(
-        op.f("ix_refresh_tokens_user_id"), "refresh_tokens", ["user_id"], unique=False
-    )
+    op.create_index(op.f("ix_refresh_tokens_user_id"), "refresh_tokens", ["user_id"], unique=False)
     op.create_table(
         "specializations",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("course_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=150), nullable=False),
-        sa.Column(
-            "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
-        ),
+        sa.Column("is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
@@ -226,9 +209,7 @@ def upgrade() -> None:
             name=op.f("fk_specializations_course_id_courses"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_specializations")),
-        sa.UniqueConstraint(
-            "course_id", "name", name=op.f("uq_specializations_course_id")
-        ),
+        sa.UniqueConstraint("course_id", "name", name=op.f("uq_specializations_course_id")),
     )
     op.create_index(
         op.f("ix_specializations_course_id"),
@@ -241,18 +222,10 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("kind", sa.String(length=20), nullable=False),
         sa.Column("file_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "status", sa.String(length=20), server_default="pending", nullable=False
-        ),
-        sa.Column(
-            "total_rows", sa.Integer(), server_default=sa.text("0"), nullable=False
-        ),
-        sa.Column(
-            "success_rows", sa.Integer(), server_default=sa.text("0"), nullable=False
-        ),
-        sa.Column(
-            "failed_rows", sa.Integer(), server_default=sa.text("0"), nullable=False
-        ),
+        sa.Column("status", sa.String(length=20), server_default="pending", nullable=False),
+        sa.Column("total_rows", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column("success_rows", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column("failed_rows", sa.Integer(), server_default=sa.text("0"), nullable=False),
         sa.Column("started_by_id", sa.Integer(), nullable=False),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
@@ -301,9 +274,7 @@ def upgrade() -> None:
             server_default=sa.text("0"),
             nullable=False,
         ),
-        sa.Column(
-            "gap_years", sa.SmallInteger(), server_default=sa.text("0"), nullable=False
-        ),
+        sa.Column("gap_years", sa.SmallInteger(), server_default=sa.text("0"), nullable=False),
         sa.Column("gender", sa.String(length=20), nullable=True),
         sa.Column("date_of_birth", sa.Date(), nullable=True),
         sa.Column("city", sa.String(length=100), nullable=True),
@@ -353,15 +324,9 @@ def upgrade() -> None:
             "verification_status IN ('pending', 'verified', 'rejected')",
             name=op.f("ck_students_verification_status"),
         ),
-        sa.CheckConstraint(
-            "active_backlogs >= 0", name=op.f("ck_students_backlogs_non_negative")
-        ),
-        sa.CheckConstraint(
-            "cgpa BETWEEN 0 AND 10", name=op.f("ck_students_cgpa_range")
-        ),
-        sa.CheckConstraint(
-            "gap_years >= 0", name=op.f("ck_students_gap_years_non_negative")
-        ),
+        sa.CheckConstraint("active_backlogs >= 0", name=op.f("ck_students_backlogs_non_negative")),
+        sa.CheckConstraint("cgpa BETWEEN 0 AND 10", name=op.f("ck_students_cgpa_range")),
+        sa.CheckConstraint("gap_years >= 0", name=op.f("ck_students_gap_years_non_negative")),
         sa.CheckConstraint(
             "profile_completeness BETWEEN 0 AND 100",
             name=op.f("ck_students_completeness_range"),
@@ -377,9 +342,7 @@ def upgrade() -> None:
             ["specializations.id"],
             name=op.f("fk_students_specialization_id_specializations"),
         ),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["users.id"], name=op.f("fk_students_user_id_users")
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_students_user_id_users")),
         sa.ForeignKeyConstraint(
             ["verified_by_id"],
             ["users.id"],
@@ -388,12 +351,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_students")),
         sa.UniqueConstraint("user_id", name=op.f("uq_students_user_id")),
     )
-    op.create_index(
-        "ix_students_batch_course", "students", ["batch_id", "course_id"], unique=False
-    )
-    op.create_index(
-        op.f("ix_students_enrollment_no"), "students", ["enrollment_no"], unique=True
-    )
+    op.create_index("ix_students_batch_course", "students", ["batch_id", "course_id"], unique=False)
+    op.create_index(op.f("ix_students_enrollment_no"), "students", ["enrollment_no"], unique=True)
     op.create_index(
         "ix_students_verification_status",
         "students",
@@ -448,9 +407,7 @@ def upgrade() -> None:
             "level IN ('10th', '12th', 'diploma', 'graduation', 'post_graduation')",
             name=op.f("ck_student_academics_level"),
         ),
-        sa.CheckConstraint(
-            "cgpa BETWEEN 0 AND 10", name=op.f("ck_student_academics_cgpa_range")
-        ),
+        sa.CheckConstraint("cgpa BETWEEN 0 AND 10", name=op.f("ck_student_academics_cgpa_range")),
         sa.CheckConstraint(
             "percentage BETWEEN 0 AND 100",
             name=op.f("ck_student_academics_percentage_range"),
@@ -462,9 +419,7 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_student_academics")),
-        sa.UniqueConstraint(
-            "student_id", "level", name=op.f("uq_student_academics_student_id")
-        ),
+        sa.UniqueConstraint("student_id", "level", name=op.f("uq_student_academics_student_id")),
     )
     op.create_index(
         op.f("ix_student_academics_student_id"),
@@ -472,9 +427,7 @@ def upgrade() -> None:
         ["student_id"],
         unique=False,
     )
-    op.add_column(
-        "users", sa.Column("full_name", sa.String(length=150), nullable=False)
-    )
+    op.add_column("users", sa.Column("full_name", sa.String(length=150), nullable=False))
     op.add_column("users", sa.Column("phone", sa.String(length=20), nullable=True))
     op.add_column(
         "users",
@@ -485,9 +438,7 @@ def upgrade() -> None:
             nullable=False,
         ),
     )
-    op.add_column(
-        "users", sa.Column("last_login_at", sa.DateTime(timezone=True), nullable=True)
-    )
+    op.add_column("users", sa.Column("last_login_at", sa.DateTime(timezone=True), nullable=True))
     op.add_column(
         "users",
         sa.Column(
@@ -497,26 +448,20 @@ def upgrade() -> None:
             nullable=False,
         ),
     )
-    op.alter_column(
-        "users", "password_hash", existing_type=sa.VARCHAR(length=255), nullable=True
-    )
+    op.alter_column("users", "password_hash", existing_type=sa.VARCHAR(length=255), nullable=True)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
-    op.alter_column(
-        "users", "password_hash", existing_type=sa.VARCHAR(length=255), nullable=False
-    )
+    op.alter_column("users", "password_hash", existing_type=sa.VARCHAR(length=255), nullable=False)
     op.drop_column("users", "updated_at")
     op.drop_column("users", "last_login_at")
     op.drop_column("users", "must_change_password")
     op.drop_column("users", "phone")
     op.drop_column("users", "full_name")
-    op.drop_index(
-        op.f("ix_student_academics_student_id"), table_name="student_academics"
-    )
+    op.drop_index(op.f("ix_student_academics_student_id"), table_name="student_academics")
     op.drop_table("student_academics")
     op.drop_index(op.f("ix_import_job_errors_job_id"), table_name="import_job_errors")
     op.drop_table("import_job_errors")
@@ -530,9 +475,7 @@ def downgrade() -> None:
     op.drop_table("specializations")
     op.drop_index(op.f("ix_refresh_tokens_user_id"), table_name="refresh_tokens")
     op.drop_table("refresh_tokens")
-    op.drop_index(
-        op.f("ix_password_reset_tokens_user_id"), table_name="password_reset_tokens"
-    )
+    op.drop_index(op.f("ix_password_reset_tokens_user_id"), table_name="password_reset_tokens")
     op.drop_table("password_reset_tokens")
     op.drop_index(op.f("ix_files_uploaded_by_id"), table_name="files")
     op.drop_index(op.f("ix_files_sha256"), table_name="files")

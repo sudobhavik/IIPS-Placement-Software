@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.dependencies import require_role
+from app.api.v1.auth import get_current_admin_user, get_current_student as auth_get_current_student
 from app.models.enums import UserRole, VerificationStatus
 from app.models.student import Student, StudentAcademic
 from app.models.user import User
@@ -28,7 +28,7 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 def get_current_student(
     db: DbSession,
-    current_user: User = Depends(require_role(UserRole.STUDENT)),
+    current_user: User = Depends(auth_get_current_student),
 ) -> Student:
     student = student_service.get_student_by_user_id(db, current_user.id)
     if not student:
@@ -72,7 +72,7 @@ def get_target_student(id: int, db: DbSession) -> Student:
 
 
 TargetStudent = Annotated[Student, Depends(get_target_student)]
-AdminUser = Annotated[User, Depends(require_role(UserRole.ADMIN, UserRole.SUPER_ADMIN))]
+AdminUser = Annotated[User, Depends(get_current_admin_user)]
 
 # ── /me routes (Student role) ────────────────────────────────────────────
 
