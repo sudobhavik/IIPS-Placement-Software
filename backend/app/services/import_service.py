@@ -136,8 +136,60 @@ class StudentImportService:
             if h not in header_map:
                 raise ValueError(f"Required header '{h}' not found")
 
+        aggregated_data: dict[str, dict[str, Any]] = {}
+        enrollment_row_num: dict[str, int] = {}
+
+        # 1. Process Complete Data first
         for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=False), start=2):
-            self._process_row(row, row_idx, header_map)
+            enrollment_idx = header_map.get("enrollment_no")
+            if enrollment_idx is None or enrollment_idx >= len(row) or not row[enrollment_idx]:
+                continue
+            
+            enrollment = str(row[enrollment_idx].value).strip().upper()
+            enrollment = re.sub(r"\s+", "", enrollment)
+            if not enrollment:
+                continue
+
+            row_dict = {}
+            for h, idx in header_map.items():
+                if idx < len(row) and row[idx]:
+                    row_dict[h] = row[idx].value
+            
+            aggregated_data[enrollment] = row_dict
+            enrollment_row_num[enrollment] = row_idx
+
+        # 2. Process other sheets to enrich data (like linkedin_url from other sheets)
+        for sheet_name in wb.sheetnames:
+            if sheet_name == "Complete Data":
+                continue
+            
+            other_ws = wb[sheet_name]
+            other_headers = [cell.value for cell in next(other_ws.iter_rows(min_row=1, max_row=1))]
+            other_header_map = {h: i for i, h in enumerate(other_headers) if h and h not in forbidden_cols}
+            
+            enrollment_key = next((k for k in ["enrollment_no", "Enrollment Number (Example: DX2200123)", "Enrollment Number"] if k in other_header_map), None)
+            
+            if not enrollment_key:
+                continue
+                
+            other_enrollment_idx = other_header_map[enrollment_key]
+            for row in other_ws.iter_rows(min_row=2, values_only=False):
+                if other_enrollment_idx >= len(row) or not row[other_enrollment_idx]:
+                    continue
+                    
+                enrollment = str(row[other_enrollment_idx].value).strip().upper()
+                enrollment = re.sub(r"\s+", "", enrollment)
+                
+                if enrollment in aggregated_data:
+                    for h, idx in other_header_map.items():
+                        if h == enrollment_key:
+                            continue
+                        if idx < len(row) and row[idx] and row[idx].value is not None:
+                            aggregated_data[enrollment][h] = row[idx].value
+
+        # 3. Process the unified rows
+        for enrollment, row_dict in aggregated_data.items():
+            self._process_row(row_dict, enrollment_row_num[enrollment])
 
         self.job.total_rows = row_idx - 1
         self.job.success_rows = self.imported
@@ -157,13 +209,9 @@ class StudentImportService:
             "errors": self.errors,
         }
 
-    def _process_row(self, row: tuple, row_num: int, header_map: dict[str, int]) -> None:
+    def _process_row(self, row_dict: dict[str, Any], row_num: int) -> None:
         def get_val(key: str) -> Any:
-            idx = header_map.get(key)
-            if idx is None or idx >= len(row):
-                return None
-            cell = row[idx]
-            return cell.value if cell else None
+            return row_dict.get(key)
 
         raw_email = get_val("email")
         raw_fullname = get_val("fullname")
@@ -175,7 +223,9 @@ class StudentImportService:
         raw_course = get_val("course")
         raw_tenth = get_val("10th_percent")
         raw_twelfth = get_val("12th_percent")
+        raw_diploma = get_val("diploma_percent")
         raw_ug = get_val("ug_cgpa")
+        raw_pg = get_val("pg_cgpa")
         raw_current = get_val("current_cgpa")
         raw_backlogs = get_val("backlogs")
         raw_roll = get_val("roll_no")
@@ -186,6 +236,13 @@ class StudentImportService:
         raw_mother = get_val("mother")
         raw_caste = get_val("caste")
         raw_address = get_val("home_address")
+
+        raw_linkedin = get_val("linkedin_url") or get_val("Your LinkedIn Link")
+        raw_github = get_val("github_url") or get_val("Your GitHub Link")
+        raw_portfolio = get_val("portfolio_url")
+        raw_placement_opt_in = get_val("Are you interested in Campus Placements?")
+        raw_10th_board = get_val("Board of Education - 10th standard")
+        raw_12th_board = get_val("Board of Education - 12th standard")
 
         if raw_is_placed:
             self.placed_flag_ignored += 1
@@ -225,15 +282,31 @@ class StudentImportService:
 
         tenth_pct = self._parse_score(raw_tenth, "10th_percent", row_num)
         twelfth_pct = self._parse_score(raw_twelfth, "12th_percent", row_num)
+        diploma_pct = self._parse_score(raw_diploma, "diploma_percent", row_num)
         ug_cgpa_raw = self._parse_cgpa_raw(
             raw_ug,
             "ug_cgpa",
             row_num,
             allow_blank_for_mtech=(course_code == "MTECH_IT"),
         )
+        pg_cgpa_raw = self._parse_cgpa_raw(
+            raw_pg,
+            "pg_cgpa",
+            row_num,
+            allow_blank_for_mtech=False,
+        )
         current_percentage = self._parse_cgpa(raw_current, "current_cgpa", row_num)
         backlogs = self._parse_backlogs(raw_backlogs, row_num)
         is_debarred = bool(raw_is_debarred)
+
+        placement_opt_in = True
+        if raw_placement_opt_in is not None:
+            opt_str = str(raw_placement_opt_in).strip().lower()
+            if opt_str in ("no", "n", "false"):
+                placement_opt_in = False
+
+        board_10th = str(raw_10th_board).strip() if raw_10th_board and str(raw_10th_board).strip() else None
+        board_12th = str(raw_12th_board).strip() if raw_12th_board and str(raw_12th_board).strip() else None
 
         if self.errors and self.errors[-1].row_number == row_num:
             return
@@ -300,11 +373,11 @@ class StudentImportService:
             caste=str(raw_caste).strip() if raw_caste else None,
             city=self._extract_city_state(str(raw_address).strip() if raw_address else None)[0],
             state=self._extract_city_state(str(raw_address).strip() if raw_address else None)[1],
-            linkedin_url=None,
-            github_url=None,
-            portfolio_url=None,
+            linkedin_url=str(raw_linkedin).strip() if raw_linkedin else None,
+            github_url=str(raw_github).strip() if raw_github else None,
+            portfolio_url=str(raw_portfolio).strip() if raw_portfolio else None,
             guardian_phone=guardian_no,
-            placement_opt_in=True,
+            placement_opt_in=placement_opt_in,
             verification_status=VerificationStatus.PENDING,
             verified_by_id=None,
             verified_at=None,
@@ -321,7 +394,7 @@ class StudentImportService:
                 StudentAcademic(
                     student_id=student.id,
                     level=AcademicLevel.TENTH,
-                    institution=None,
+                    institution=board_10th,
                     stream=None,
                     year_of_passing=None,
                     percentage=Decimal(str(tenth_pct)),
@@ -333,10 +406,22 @@ class StudentImportService:
                 StudentAcademic(
                     student_id=student.id,
                     level=AcademicLevel.TWELFTH,
-                    institution=None,
+                    institution=board_12th,
                     stream=None,
                     year_of_passing=None,
                     percentage=Decimal(str(twelfth_pct)),
+                    cgpa=None,
+                )
+            )
+        if diploma_pct is not None:
+            self.db.add(
+                StudentAcademic(
+                    student_id=student.id,
+                    level=AcademicLevel.DIPLOMA,
+                    institution=None,
+                    stream=None,
+                    year_of_passing=None,
+                    percentage=Decimal(str(diploma_pct)),
                     cgpa=None,
                 )
             )
@@ -350,6 +435,18 @@ class StudentImportService:
                     year_of_passing=None,
                     percentage=None,
                     cgpa=Decimal(str(ug_cgpa_raw)),
+                )
+            )
+        if pg_cgpa_raw is not None:
+            self.db.add(
+                StudentAcademic(
+                    student_id=student.id,
+                    level=AcademicLevel.POST_GRADUATION,
+                    institution=None,
+                    stream=None,
+                    year_of_passing=None,
+                    percentage=None,
+                    cgpa=Decimal(str(pg_cgpa_raw)),
                 )
             )
 
@@ -690,7 +787,7 @@ class StudentImportService:
     def _parse_cgpa(
         self, value: Any, field_name: str, row_num: int, allow_blank_for_mtech: bool = False
     ) -> float | None:
-        """Parse CGPA value (0-10 scale). Returns percentage (0-100) by multiplying by 10."""
+        """Parse CGPA value. Returns percentage (0-100). If input is <=10, it's treated as CGPA and multiplied by 10."""
         if value is None or (isinstance(value, str) and value.strip() == ""):
             if allow_blank_for_mtech:
                 self._add_warning(
@@ -712,12 +809,14 @@ class StudentImportService:
             )
             return None
 
-        if num < 0 or num > 10:
+        if num <= 10:
+            num *= 10
+        elif num > 100 or num < 0:
             self._add_error(
                 row_num,
                 field_name,
                 ImportErrorCode.INVALID_SCORE,
-                f"{field_name} {num} out of range 0-10",
+                f"{field_name} {num} out of range 0-100",
             )
             return None
 
@@ -726,7 +825,7 @@ class StudentImportService:
     def _parse_cgpa_raw(
         self, value: Any, field_name: str, row_num: int, allow_blank_for_mtech: bool = False
     ) -> float | None:
-        """Parse CGPA value (0-10 scale). Returns raw CGPA (0-10) without multiplying by 10."""
+        """Parse CGPA value. Returns raw CGPA (0-10). If input > 10, it's treated as percentage and divided by 10."""
         if value is None or (isinstance(value, str) and value.strip() == ""):
             self._add_warning(
                 row_num,
@@ -747,7 +846,9 @@ class StudentImportService:
             )
             return None
 
-        if num < 0 or num > 10:
+        if num > 10 and num <= 100:
+            num /= 10
+        elif num > 100 or num < 0:
             self._add_error(
                 row_num,
                 field_name,
