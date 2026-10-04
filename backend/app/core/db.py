@@ -3,7 +3,7 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.core.config import settings
 
-# Predictable constraint/index names make Alembic migrations stable and reviewable.
+# Predictable constraint/indAchaaex names make Alembic migrations stable and reviewable.
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
