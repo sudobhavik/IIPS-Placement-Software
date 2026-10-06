@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 from app.models.enums import AcademicLevel, Gender, VerificationStatus
 
 
-# ── Nested read schemas (minimal, for eager-loaded relationships) ────────
+# ── Nested read schemas (minimal, for eager-loaded relationships) ─────────────
 
 
 class UserBrief(BaseModel):
@@ -34,7 +34,7 @@ class BatchBrief(BaseModel):
     passing_year: int
 
 
-# ── Student ──────────────────────────────────────────────────────────────
+# ── Student ──────────────────────────────────────────────────────────────────
 
 
 class StudentRead(BaseModel):
@@ -47,7 +47,7 @@ class StudentRead(BaseModel):
     specialization_id: int | None
     batch_id: int
     current_semester: int | None
-    cgpa: float | None
+    current_percentage: float | None
     active_backlogs: int
     gap_years: int
     gender: str | None
@@ -81,7 +81,7 @@ class StudentUpdate(BaseModel):
     placement_opt_in: bool | None = None
 
 
-# ── StudentAcademic ──────────────────────────────────────────────────────
+# ── StudentAcademic ──────────────────────────────────────────────────────────
 
 
 class StudentAcademicRead(BaseModel):
@@ -117,7 +117,7 @@ class StudentAcademicUpdate(BaseModel):
     cgpa: float | None = None
 
 
-# ── Verify ───────────────────────────────────────────────────────────────
+# ── Verify ───────────────────────────────────────────────────────────────────
 
 
 class StudentVerifyRequest(BaseModel):
@@ -125,7 +125,7 @@ class StudentVerifyRequest(BaseModel):
     remarks: str | None = None
 
 
-# ── Paginated list ───────────────────────────────────────────────────────
+# ── Paginated list ───────────────────────────────────────────────────────────
 
 
 class StudentListResponse(BaseModel):

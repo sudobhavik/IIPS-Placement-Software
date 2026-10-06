@@ -629,8 +629,8 @@ class StudentImportService:
             ).scalar_one_or_none()
         else:
             batch = self.db.execute(
-                select(Batch).where(Batch.is_active).order_by(Batch.passing_year.desc())
-            ).scalar_one_or_none()
+    select(Batch).where(Batch.is_active).order_by(Batch.passing_year.desc()).limit(1)
+).scalar_one_or_none()
         if not batch:
             self._add_error(
                 row_num,

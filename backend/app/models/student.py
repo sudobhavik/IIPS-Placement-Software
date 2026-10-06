@@ -15,12 +15,14 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from app.core.db import Base
 from app.models.base import SoftDeleteMixin, TimestampMixin, enum_check
 from app.models.enums import AcademicLevel, Gender, VerificationStatus
 from app.models.master import Batch, Course, Specialization
 from app.models.user import User
+
 
 class Student(SoftDeleteMixin, TimestampMixin, Base):
     """Placement profile. Name and phone live on `users`. 'Placed' is derived from offers."""
@@ -84,6 +86,15 @@ class Student(SoftDeleteMixin, TimestampMixin, Base):
     academics: Mapped[list["StudentAcademic"]] = relationship(
         back_populates="student", cascade="all, delete-orphan"
     )
+
+    @hybrid_property
+    def cgpa(self) -> float | None:
+        """Backward compatibility: return current_percentage as cgpa."""
+        return self.current_percentage
+
+    @cgpa.setter
+    def cgpa(self, value: float | None) -> None:
+        self.current_percentage = value
 
 
 class StudentAcademic(TimestampMixin, Base):

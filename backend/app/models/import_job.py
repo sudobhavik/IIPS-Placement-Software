@@ -33,7 +33,11 @@ class ImportJob(CreatedAtMixin, Base):
     )
 
 
-class ImportJobError(Base):
+# Line 8 - add CreatedAtMixin to imports
+from app.models.base import CreatedAtMixin, enum_check
+
+# Line 36 - Add CreatedAtMixin to class inheritance
+class ImportJobError(CreatedAtMixin, Base):
     """One row per failed line, so errors can be paged, filtered and downloaded."""
 
     __tablename__ = "import_job_errors"
@@ -46,5 +50,7 @@ class ImportJobError(Base):
     column_name: Mapped[str | None] = mapped_column(String(100))
     message: Mapped[str] = mapped_column(Text)
     raw_row: Mapped[dict | None] = mapped_column(JSONB)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
     job: Mapped["ImportJob"] = relationship(back_populates="errors")
