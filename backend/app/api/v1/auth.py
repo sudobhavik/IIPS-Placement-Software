@@ -123,7 +123,7 @@ def login(
         httponly=True,
         secure=settings.cookie_secure,
         samesite=settings.cookie_samesite,
-        path="/api/v1/auth",
+        path="/api/v1",
         max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
     )
 
@@ -159,7 +159,7 @@ def refresh(
         except Exception:
             pass
         # Clear the cookie
-        response.delete_cookie("refresh_token", path="/api/v1/auth")
+        response.delete_cookie("refresh_token", path="/api/v1")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
@@ -168,7 +168,7 @@ def refresh(
     user = auth_service.db.execute(select(User).where(User.id == rt.user_id)).scalar_one_or_none()
 
     if not user or not user.is_active:
-        response.delete_cookie("refresh_token", path="/api/v1/auth")
+        response.delete_cookie("refresh_token", path="/api/v1")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
@@ -189,7 +189,7 @@ def refresh(
         httponly=True,
         secure=settings.cookie_secure,
         samesite=settings.cookie_samesite,
-        path="/api/v1/auth",
+        path="/api/v1",
         max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
     )
 
@@ -210,7 +210,7 @@ def logout(
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token:
         auth_service.revoke_refresh_token(refresh_token)
-    response.delete_cookie("refresh_token", path="/api/v1/auth")
+    response.delete_cookie("refresh_token", path="/api/v1")
 
     # Write logout audit
     # We don't know the user_id from cookie alone, but we could decode the token

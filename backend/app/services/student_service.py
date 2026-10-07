@@ -89,7 +89,7 @@ def list_students(
     if verification_status is not None:
         query = query.filter(Student.verification_status == verification_status)
     if min_cgpa is not None:
-        query = query.filter(Student.cgpa >= min_cgpa)
+        query = query.filter(Student.current_percentage >= min_cgpa)
     if placement_opt_in is not None:
         query = query.filter(Student.placement_opt_in == placement_opt_in)
     if search:

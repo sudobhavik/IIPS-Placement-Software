@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+// frontend/src/App.tsx
+import { AppRoutes } from "./routes/AppRoutes";
+import { useEffect } from "react";
 
-export default function App() {
-  const [status, setStatus] = useState("checking...");
-
+function App() {
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/health")
-      .then((r) => r.json())
-      .then((d) => setStatus(`API ${d.status}, DB ${d.database}`))
-      .catch(() => setStatus("API unreachable"));
+    console.log("App mounted");
+    return () => console.log("App unmounted");
   }, []);
 
-  return <h1 className="p-8 text-2xl font-semibold">PlaceIQ: {status}</h1>;
+  return <AppRoutes />;
 }
+
+export default App;
