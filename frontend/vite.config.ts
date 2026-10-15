@@ -8,12 +8,12 @@ export default defineConfig({
   server: {
     proxy: {
       "/api/v1": {
-        target: "http://localhost:8000",
+        target: "http://backend:8000",
         changeOrigin: true,
         secure: false,
         cookieDomainRewrite: "localhost",
         configure: (proxy) => {
-          proxy.on("proxyReq", (proxyReq, req, res) => {
+          proxy.on("proxyReq", (proxyReq, req) => {
             const cookie = req.headers["cookie"] || req.headers["Cookie"];
             if (cookie) {
               proxyReq.setHeader("cookie", cookie);
@@ -24,7 +24,7 @@ export default defineConfig({
               proxyReq.setHeader("content-type", contentType);
             }
           });
-          proxy.on("proxyRes", (proxyRes, req, res) => {
+          proxy.on("proxyRes", (proxyRes, _req, res) => {
             const cookies = proxyRes.headers["set-cookie"];
             if (cookies) {
               const cookieArray = Array.isArray(cookies) ? cookies : [cookies];
