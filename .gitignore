@@ -40,3 +40,7 @@ htmlcov/
 #cline
 .clineignore
 .clinerules/
+
+*.md 
+*.pdf
+*.db

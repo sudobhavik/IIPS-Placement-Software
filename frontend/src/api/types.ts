@@ -203,7 +203,7 @@ export interface StudentListParams {
   batch_id?: number;
   course_id?: number;
   verification_status?: VerificationStatus;
-  min_current_percentage?: number;
+  min_cgpa?: number;
   placement_opt_in?: boolean;
   search?: string;
   is_debarred?: boolean;
