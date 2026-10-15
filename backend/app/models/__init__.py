@@ -1,6 +1,7 @@
 """Import every model here so Alembic autogenerate can discover all tables."""
 
 from app.models.audit import AuditLog  # noqa: F401
+from app.models.company import Company, CompanyContact  # noqa: F401
 from app.models.file import File  # noqa: F401
 from app.models.import_job import ImportJob, ImportJobError  # noqa: F401
 from app.models.master import Batch, Course, Specialization  # noqa: F401

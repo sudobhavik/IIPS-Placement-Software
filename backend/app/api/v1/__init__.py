@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, imports, master, users
+from app.api.v1 import auth, companies, imports, master, users
 
 # Create a base router WITHOUT prefix
 api_router = APIRouter()
@@ -15,3 +15,6 @@ api_router.include_router(users.router, tags=["users"])
 
 # Include master - router ALREADY has prefix="/master"
 api_router.include_router(master.router, tags=["master"])
+
+# Include companies - router ALREADY has prefix="/companies"
+api_router.include_router(companies.router, tags=["companies"])
