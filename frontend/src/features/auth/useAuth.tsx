@@ -5,13 +5,14 @@ import {
   useState,
   useEffect,
   useCallback,
-  ReactNode,
   useMemo,
 } from "react";
+import type { ReactNode } from "react";
 import { authApi } from "./authApi";
 import { apiClient, clearAuth, setAuth, getStoredUser, getStoredToken } from "../../api/client";
 import { STORAGE_KEYS, USER_ROLES, ROUTES } from "../../lib/constants";
-import type { MeResponse, UserRole, LoginResponse } from "../../api/types";
+import type { UserRole } from "../../lib/constants";
+import type { MeResponse } from "../../api/types";
 
 // ============================================================================
 // Auth Context Types
@@ -194,7 +195,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async (current_password: string, new_password: string) => {
       setIsLoading(true);
       try {
-        await authApi.changePassword({ current_password, new_password });
+        await authApi.changePassword(current_password, new_password);
         if (user) {
           const updatedUser = { ...user, must_change_password: false };
           setUser(updatedUser);
