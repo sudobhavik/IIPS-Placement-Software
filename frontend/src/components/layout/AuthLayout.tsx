@@ -1,12 +1,13 @@
 // frontend/src/components/layout/AuthLayout.tsx
-import { Outlet, useRoutes, useLocation } from "react-router-dom";
-import { ReactNode, useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import type { ReactNode } from "react";
 
 interface AuthLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
-export function AuthLayout({ children }: AuthLayoutProps) {
+export function AuthLayout(_: AuthLayoutProps) {
   const location = useLocation();
 
   // Debug: Log what's happening
@@ -22,14 +23,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <p className="text-gray-500 dark:text-gray-400 mt-1">Placement Management System</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 min-h-[200px]">
-          {/* DEBUG: Show outlet context */}
-          <div style={{ border: "1px dashed red", padding: "10px", marginBottom: "10px" }}>
-            <strong>Debug:</strong> Outlet should render here. Current path: {location.pathname}
-          </div>
           <Outlet />
-
-          {/* DEBUG: Fallback if no match */}
-          {/* <Outlet context={{ notFound: true }} /> */}
         </div>
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
           IIPS Placement Cell
